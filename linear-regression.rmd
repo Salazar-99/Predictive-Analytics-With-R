@@ -1,0 +1,35 @@
+---
+title: "5-2"
+output: html_document
+---
+We begin, as always, by loading the data
+```{r}
+data = read.csv("ex0725.csv", header=TRUE)
+attach(data)
+```
+
+We perform a linear regression for each of the four countries making sure to omit any NA values
+```{r}
+denmark_model = lm(Denmark~Year, data=data)
+summary(denmark_model)
+```
+
+```{r}
+netherlands_model = lm(Netherlands~Year, data=data)
+summary(netherlands_model)
+```
+
+```{r}
+Canada = na.omit(data["Canada"])
+canada_model = lm(Canada~Year, data=data)
+summary(canada_model)
+```
+
+```{r}
+USA = na.omit(data["USA"])
+usa_model = lm(USA~Year, data=data)
+summary(usa_model)
+```
+
+**(b-e)** The t-test statistic is given by $T=\frac{\hat \beta-\beta_{H_0}}{SE_{\hat\beta}}$. Here $\beta_{H_0}=0$ because we are testing whether or not the population is declining (slope zero or less than zero). The model summaries above calculate this statistic by default. The minimum of the t-statistics is 14.673 in the case of Denmark. This suggests that male birth rates are in fact declining for all countries (as the t-statistic is quite large). The United States can have the largest of the four t-statistics because it has a much lower standard error as well as less data points than Denmark or The Netherlands. These two terms then boost the t-statistic as can be seen from the equation given above. The standard error of the fit is smaller for the United States than Canada because the points lie closer to the regression line. This can be seen by inspecting Display 7.17 as provided in the exercise. Considering that male birth rate of each country is an average (i.e. the expected value) we can expect the variance (and thus std. deviation) of the sampled averages to decrease as the sample size (population) increases. In essence, as population size increases the averages "tighten up" as they converge to the expected value via the Law of Large Numbers.
+ 

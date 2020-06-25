@@ -1,0 +1,154 @@
+---
+title: "Homework 8"
+output: pdf_document
+---
+
+## Problem 1
+```{r}
+data = read.csv("placekick.csv", header=TRUE)
+attach(data)
+```
+
+Performing Box's M Test on the data (I had trouble installing the dependencies for the heplots library on Ubuntu 19 so I couldn't run this command)
+```{r}
+#boxM(data$good, data.frame(data$elap30, data$distance))
+```
+
+## Problem 2
+Loading the data
+```{r}
+library(ISLR)
+attach(Auto)
+```
+
+(a) Creating the binary response variable
+```{r}
+threshold = median(Auto$mpg)
+mpg01 = factor(ifelse(Auto$mpg > threshold, 1, 0))
+```
+
+Creating a data frame containing the mpg01 variable in place of the original mpg column
+```{r}
+drops = c("mpg")
+Auto = Auto[, !(names(Auto) %in% drops)]
+Auto_2 = cbind(mpg01, Auto)
+```
+
+(b) Creating scatterplots to analyze the structure of the data with the new binary response variable
+```{r}
+pairs(Auto_2)
+```
+
+It seems that horespower, displacement, and weight are good predictors for the mpg01 variable. The scatterplots involving these quantities seem to have some kind of learnable structure. 
+
+(c) Splitting the data into a train and test set
+```{r}
+set.seed(99)
+train_size = floor(.75*nrow(Auto_2))
+train_indices = sample(nrow(Auto_2), size=train_size)
+train = as.data.frame(Auto_2[train_indices,])
+test = as.data.frame(Auto_2[-train_indices,])
+```
+
+(d) Fitting the LDA model to the training data. (Note: When specifying the dataframe used for training with data=, use the column names in the formula argument rather than data$column.)
+```{r}
+library(MASS)
+lda_model = lda(mpg01~horsepower+weight+displacement, data=train)
+```
+
+Evaluating the LDA model on the test set
+```{r}
+lda_predictions = predict(lda_model, newdata=test)
+table(lda_predictions$class, test$mpg01)
+```
+
+Our LDA model achieves about 83% accuracy
+```{r}
+accuracy = (40+41)/(40+41+2+15)
+accuracy*100
+```
+
+(e) Training a QDA model
+```{r}
+qda_model = qda(mpg01~horsepower+weight+displacement, data=train)
+```
+
+Evaluating the QDA model on the test set
+```{r}
+qda_predictions = predict(qda_model, newdata=test)
+table(qda_predictions$class, test$mpg01)
+```
+
+Our QDA model achieves about 86% accuracy as well
+```{r}
+accuracy = (44+40)/(44+40+3+11)
+accuracy*100
+```
+
+(f) Training a Logistic Regression model
+```{r}
+logistic_model = glm(mpg01~horsepower+weight+displacement, family=binomial)
+```
+
+Evaluating the logistic model on the test data with a threshold of .5
+```{r}
+logistic_predictions = predict(logistic_model, newdata=test, type="response")
+classes = factor(test$mpg01, levels=c("0","1"))
+for (i in range(1, nrow(test$mpg01))){
+  if (logistic_predictions[i] >= .5){
+    classes[i] = "1"
+  }
+  else {
+    classes[i] = "0"
+  }
+}
+table(classes, test$mpg01)
+```
+
+The accuracy of the logistic model is 100%.
+
+(g) Training a KNN model
+```{r}
+library(caret)
+knn_fit = train(mpg01 ~ displacement + horsepower + weight, method = 'knn', data = train)
+knn_pred = predict(knn_fit, newdata = test)
+table(knn_pred, test$mpg01)
+```
+
+The accuracy of the KNN model is about 84%
+```{r}
+accuracy = (42+40)/(42+40+3+13)
+accuracy
+```
+
+## Problem 3
+Computing the Mahalanobis distance
+```{r}
+drops = c("name")
+Auto = Auto[, !(names(Auto) %in% drops)]
+mahalanobis_dist = mahalanobis(Auto, colMeans(Auto), cov(Auto))
+```
+
+Flagging outliers
+```{r}
+Auto$M = round(mahalanobis_dist, 3)
+Auto$outlier_M = FALSE
+Auto$outlier_M[Auto$M>10] = TRUE
+head(Auto)
+```
+
+## Problem 4
+A linear basis expansion for a decision tree can be obtained by writing down a linear combination of indicator variables (plus a bias) where each indicator variable represents the relationships between the root node and the internal nodes required to reach that indicator's respective terminal node.
+
+## Problem 5
+(a) The Gini impurity index is given by
+$$ G = \sum_{k=1}^K\hat p_{mk}(1-\hat p_{mk})$$
+For the given data
+$$ G = \frac{2}{7}\left(1-\frac{2}{7}\right) + \frac{3}{7}\left(1-\frac{3}{7}\right) + \frac{2}{7}\left(1-\frac{2}{7}\right) \approx .65$$
+
+(b) Beginning with the question "Is the diameter greater than 2?". The information gain is given by
+$$ I = E_{root}-\left(n_1G_1+n_2G_2 \right)$$
+Where $E_{root}$ is the entropy of the root node, $n_i$ is the proportion of samples in the $i$-th node, and $G_i$ is the Gini impurity of the $i$-th node. The definition of the entropy is
+$$ E = -\sum_{k=1}^K \hat p_{mk}\log \hat p_{mk}$$
+The result is then
+$$ I = 1.078 - \left(\frac{4}{7}\cdot\frac{1}{2}-\frac{3}{7}\cdot 0\right) \approx .79$$

@@ -1,0 +1,48 @@
+---
+title: "HW5"
+output: html_document
+---
+**(1b)** Finding the SVD of A
+```{r}
+A = as.matrix(data.frame(c(3,-1,1),c(1,0,2)))
+A.svd = svd(A)
+A.svd
+```
+
+**(3a)** Finding SVD of the customer preference data
+```{r}
+B = as.matrix(data.frame(c(5,4,3,1,0,5),c(4,5,4,0,1,5),c(1,0,0,5,4,0),c(1,0,1,4,5,0)))
+B.svd = svd(B)
+V = B.svd$v
+B.svd
+```
+
+**(3b)** Looking at the matrix $V$ from the decomposition we can deduce whether or not there exists a lower dimensional subspace to map the feature vectors to. Looking at the first and third columns together we notice that the first two elements are sufficiently larger than the remaining two elements. The inverse is true for the second and fourth columns. This indicates that there is a 2-dimensional subspace that the data can be mapped into. This can be leveraged to form a naive recommendation system. 
+
+**(3c)** To form a recommendation for a data point $p$ we can compute $p^TV$ and identify the significant components
+```{r}
+p = as.matrix(data.frame(1,0,0,5))
+p %*% V
+```
+
+It appears that Mathilde falls into the Movies and Music category more than the Books and Pens category based on the first two values.
+
+**(5)** We can rewrite the regression problem in terms of the SVD as follows
+$$ Y = X\beta$$
+$$ Y=U\Sigma V^T\beta$$
+$$ U^TY=\Sigma V^T\beta$$
+$$ \Sigma^{-1}U^TY=V^T\beta$$
+Finally we have
+$$ V\Sigma^{-1}U^TY=\hat\beta$$
+Where we have taken advantage of the orthogonality property of $U$ and $V$. Now we can compute the parameter vector using the above formula
+```{r}
+data = as.matrix(data.frame(c(69400,56900,49900,47400,42900,30900),c(15,25,20,36,44,49.8)))
+X = as.matrix(data.frame(c(1,1,1,1,1,1),data[,2]))
+svd = svd(X)
+sigma_inverse = solve(diag(svd$d))
+V = svd$v
+U_T = t(svd$u)
+Y = c(69400,56900,49900,47400,42900,30900)
+beta = V %*% sigma_inverse %*% U_T %*% Y
+beta
+```

@@ -1,0 +1,80 @@
+---
+title: '4'
+output: html_document
+---
+First we import the data and examine the dataset
+```{r}
+library(MASS)
+attach(Boston)
+?Boston
+```
+
+We can provide a simple point estimate of the mean of medv which we call $\hat\mu$.
+```{r}
+medv_mean = mean(Boston[["medv"]])
+medv_mean
+```
+
+We can estimate the standard error of $\hat\mu$, denoted $SE_{\hat\mu}$ via $SE_{\hat\mu}=S/\sqrt{n}$ where $S$ is the sample standard deviation.
+```{r}
+medv_sd = sd(Boston[["medv"]])
+n = length(Boston[["medv"]])
+mean_se = medv_sd/sqrt(n)
+mean_se
+```
+
+Now we can use a bootstrap to estimate the standard error of $\hat\mu$
+```{r}
+N=10^4
+mean_se_boot = numeric(N)
+for (i in 1:N){
+  medv_boot = sample(Boston[["medv"]], n, replace=TRUE)
+  mean_se_boot[i] = sd(medv_boot)/sqrt(n)
+}
+mean(mean_se_boot)
+```
+
+This result is in very good agreement with the estimate above. We can create a 95% confidence interval using 
+$[\hat\mu-2SE_{\hat\mu}, \hat\mu+2SE_{\hat\mu}]$
+```{r}
+lower = medv_mean - 2*mean_se
+upper = medv_mean + 2*mean_se
+cat("Lower Estimate: ", lower, "Upper Estimate: ", upper)
+```
+
+Now we can perform a t-test to find an alternate estimate
+```{r}
+t.test(Boston[["medv"]])
+```
+
+Both estimates are very close to eachoter. We can give a simple point estimate of the median
+```{r}
+medv_median = median(Boston[["medv"]])
+medv_median
+```
+
+We use a bootstrap procedure to estimate the standard error with a point estimate given by the mean of the bootstrap distribution
+```{r}
+medv_median_boot = numeric(N)
+for (i in 1:N){
+  medv_boot = sample(Boston[["medv"]], n, replace = TRUE)
+  medv_median_boot[i] = sd(medv_boot)/sqrt(n)
+}
+mean(medv_median_boot)
+```
+
+The standard error of the median is very similar to that of the mean. We can find the tenth percentile of medv with the quantile function
+```{r}
+medv_tenth = quantile(Boston[["medv"]], 0.1)
+medv_tenth
+```
+
+Using the bootstrap method to find the standard error gives
+```{r}
+medv_tenth_boot = numeric(N)
+for (i in 1:N){
+  medv_boot = sample(Boston[["medv"]], n, replace = TRUE)
+  medv_tenth_boot[i] = quantile(medv_boot, 0.1)
+}
+sd(medv_tenth_boot)/sqrt(N)
+```

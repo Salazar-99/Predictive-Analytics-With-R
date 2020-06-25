@@ -1,0 +1,47 @@
+---
+title: "Exercise 4-2"
+output: html_document
+---
+Loading the data
+```{r}
+library(ISLR)
+attach(Carseats)
+```
+
+**(a)** Fitting a multiple regression model
+```{r}
+model = lm(Sales ~ Price + Urban + US, data=Carseats)
+summary(model)
+```
+
+**(b)** This model has four parameters. The intercept coeffecient is exactly that, the intercept for the linear model. The Price coeffecient indicates that, if all else is held fixed, increasing the price by one unit decreases the sales by .054459. The next two coeffecients are qualitative and they act as indicators. Thus, they can be interpreted as differenced from the baseline. So the UrbanYes variable indicates that a carseat in an urban store (all else held fixed) has on average less sales by a difference of.021916. Simialrly for USYes, if a carseat is sold in the US (all else held fixed) it has on average a higher sale value with a difference of 1.2.
+
+**(c)** The model can thus be written as
+$$ \hat{\text{Sales}} = -.05(\text{Price}) + \begin{cases}
+13.04 & UrbanYes=0, USYes=0\\
+13.02 & UrbanYes = 1, USYes = 0\\
+14.24 & UrbanYes = 0, USYes = 1\\
+14.22 & UrbanYes = 1, USYes = 1\\
+\end{cases} $$
+
+**(d)** We can reject the null hypothesis $H_0: \hat \beta_j = 0$ for all but the $UrbanYes$ predictor.
+
+**(e)** Fitting a model with only the significant predictors 
+```{r}
+new_model = lm(Sales ~ Price + US, data=Carseats)
+summary(new_model)
+```
+
+**(f)** Both models fit about the same although the second model has a slightly lower RSE of 2.469. 
+
+**(g)** We can find 95% confidence intervals for each of the coeffecients as follows
+```{r}
+confint(new_model)
+```
+
+**(h)** We can look for outliers and high leverage points by inspecting the residual plot of the predictions
+```{r}
+plot(predict(new_model),resid(new_model))
+```
+
+There is no evidence of outliers or high leverage points.

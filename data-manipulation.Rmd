@@ -1,0 +1,78 @@
+---
+title: "Exercise-3"
+author: "Gerardo Salazar"
+output: html_document
+---
+This is problem 2.10 in ISLR 7th Ed.
+
+**a)** We begin by loading the data, reading its description, and forming a summary
+``` {r}
+library(MASS)
+?Boston
+summary(Boston)
+```
+There are 506 rows and 14 columns. The rows represent individual suburbs ad the columns represent predictors or feature values corresponding to particular suburbs.
+**b)** We can now make pairwise scatter plots for all quantities
+```{r}
+pairs(Boston)
+```
+
+The majority of the pairwise scatter plots portray no correlation between features.
+
+**c)** It appears that age, distance, lstat, and median value of homes are correlated with crime rate. In the case of age there is a positive correlation, in the case of distance there is a negative correlation, in the case of lstat there is a positive correlation, and in the case of median value of homes there is a negative correlation.
+**d)** We can attach the dataset to readily access its columns (this should only be done once to avoid masking warnings)
+```{r}
+attach(Boston)
+```
+Now we can plot the quantities of interest
+```{r}
+par(mfrow=c(1,3))
+plot(crim)
+plot(tax)
+plot(ptratio)
+```
+
+Inspecting these plots shows that some suburbs are outliers in terms of crime rates and tax rates. The pupil-teacher ratios are fairly evenly distributed. The range of the crime rates and tax rates is very large due to these outliers. 
+
+**e)** The chas column indicates whether or not a suburb bounds the Charles river. Using the table command we can find how many of each value appear in that particular column. A 1 indicates that a suburb that bounds the Charles river.
+```{r}
+table(chas)
+```
+We see that 35 suburbs satisfy this condition.
+
+**f)** 
+```{r}
+median(ptratio)
+```
+The median pupil-teacher ratio is 19.05.
+
+**g)**
+```{r}
+which.min(medv)
+```
+The 399th suburb has the minimum median housing value. We access this row of the dataframe below.
+```{r}
+Boston[399,]
+```
+The crime rate for this particular suburb is high compared to the rest of the data. Its rm value is on the lower end of the range. Its black population is near the maximum of the range.
+
+**h)** We can find the number of suburbs that average 7 or 8 homes per dwelling with the table command along with a conditional.
+```{r}
+table(rm>7)
+```
+So there are 64 suburbs that average more than 7 rooms per dwelling. We can do the same for 8.
+```{r}
+table(rm>8)
+```
+We see that only 13 suburbs average more than 8 rooms per dwelling. We can isolate the suburbs that have greater than 8 rooms per dwelling and summarize them as follows.
+```{r}
+eight_rooms = Boston[Boston[,"rm"]>8,]
+summary(eight_rooms)
+```
+
+For reference we can look at the summary of the entire dataset again
+```{r}
+summary(Boston)
+```
+
+We notice that the set of suburbs with an average number of rooms per dwelling greater than eight has a much lower average crime rate, a lower property tax rate, and more than two times the average of these suburbs bound the Charles river.

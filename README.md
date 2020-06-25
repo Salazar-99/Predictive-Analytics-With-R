@@ -1,0 +1,2 @@
+# Predictive Analytics With R
+This is a collection of ```R``` markdown and ```R``` script files I wrote during a course in Predictive Analytics at The University of Texas at Austin. Some are solutions to exercises from *An Introduction to Statistical Learning with R* (ISLR) and some are solutions to instructor-created problems. This repo exists mostly as a reference for my future self on statistical procedures and ```R``` recipes.

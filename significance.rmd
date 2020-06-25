@@ -1,0 +1,39 @@
+---
+title: "Exercise 4-7"
+output: html_document
+---
+Loading the data
+```{r}
+data = read.csv("Speed.csv", header=TRUE)
+attach(data)
+```
+
+Regression model for fatality
+```{r}
+model_1 = lm(FatalityRate~Year, data=data)
+summary(model_1)
+```
+
+The slope of the fit is -.044870.
+
+Examining the residual plot
+```{r}
+plot(model_1$residuals~model_1$fitted.values, xlab="Predicted", ylab="Residuals")
+abline(h=0)
+```
+
+There appears to be some correlation in the residuals.
+
+Fitting a multiple regression model
+```{r}
+model_2 = lm(FatalityRate ~ Year + StateControl + Year*StateControl)
+summary(model_2)
+```
+
+Given that the StateControl predictor is significant, we can say that there is a significant change in the relationship between FatalityRate and Year after 1995.
+
+The fitted equation is then $$ \hat Fatality = 2162 - .1076(Year)-161.4(StateControl)+.08097(Year*StateControl)$$
+$$StateControl = \begin{cases}
+1 & Year \geq 1995\\
+0 & Year < 1995
+\end{cases}$$

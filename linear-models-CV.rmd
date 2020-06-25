@@ -1,0 +1,57 @@
+---
+title: "Exercise 5.8"
+output: html_document
+---
+**(a)** Generating some simulated data
+```{r}
+set.seed(1)
+x=rnorm(100)
+y=x-2*x^2+rnorm(100)
+```
+In this data set the number of samples $n$ is 100 and the standard deviation $\sigma$ is 1. The model is given by $$ P(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-(x - μ)^2/2 \sigma^2} $$.
+**(b)** Creating a scatter plot
+```{r}
+plot(x,y)
+```
+The data seems to follow a quadratic trend.
+
+**(c)** Setting a random seed and creating a data frame from the simulated data
+```{r}
+data=data.frame(x,y)
+```
+
+Setting a random seed and performing LOOCV on 4 models of increasing order
+```{r}
+set.seed(123)
+library(boot)
+cv.err=rep(0,4)
+for (i in 1:4){
+  model_i = glm(y~poly(x,i), data=data)
+  cv.err[i]=cv.glm(data, model_i)$delta[1]
+}
+cv.err
+```
+
+**(d)** Repeating the previous with a new seed
+```{r}
+set.seed(321)
+library(boot)
+cv.err=rep(0,4)
+for (i in 1:4){
+  model_i = glm(y~poly(x,i), data=data)
+  cv.err[i]=cv.glm(data, model_i)$delta[1]
+}
+cv.err
+```
+
+The results for both are identical because the source of randomness has no bearing on a LOOCV due to the fact that regradless of the random seed the LOOCV behavior is deterministic. 
+
+**(e)** The model with the smallest LOOCV error is the quadratic model. I expected this because we know that the underlying data is quadratic itself.
+
+**(f)** Fitting the fourth order model and taking its summary will allow us to see the statistical significance of the coeffecients
+```{r}
+model = glm(y~poly(x,4),data=data)
+summary(model)
+```
+
+We can see from the summary that only terms up to second order are significant. This is consistent with the cross validation results as a model containing only the statistically significant terms was the best model.

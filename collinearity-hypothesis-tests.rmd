@@ -1,0 +1,64 @@
+---
+title: "Exercise 4-3"
+output: html_document
+---
+**(a)**
+```{r}
+set.seed(1)
+x1 = runif(100)
+x2 = 0.5*x1 + rnorm(100)/10
+y = 2+2*x1 + 0.3*x2 + rnorm(100)
+```
+
+The model is of the form $$ y = 2+2x_1+.3x_2+\epsilon$$ Where $\epsilon$ is gaussian random noise with distribution $$ \epsilon \sim \Phi(0,1)$$.
+
+**(b)** Plotting $x_1$ against $x_2$
+```{r}
+plot(x1,x2)
+```
+
+The plot reveals that the two variables are positively linearly correlated.
+
+**(c)** Fitting a model
+```{r}
+model = lm(y~x1+x2)
+summary(model)
+```
+
+The coefficients are $\hat\beta_0 = 2.1305$,$\hat\beta_1 = 1.4396$, and $\hat\beta_2=1.0097$. These are very close to the actual coeffecients used to produce the data. We reject $H_0: \beta_1=0$ given a p-value of 1.996 (this is borderline) but fail to reject $H_0: \beta_2=0$ with a p-value of .3754.
+
+**(d)** Fitting only with $x_1$
+```{r}
+x1_model = lm(y ~ x1)
+summary(x1_model)
+```
+
+With this model we safely reject the null hypothesis.
+
+**(e)** Fitting only with $x_2$
+```{r}
+x2_model = lm(y ~ x2)
+summary(x2_model)
+```
+
+We also safely reject the null hypothesis with this model.
+
+**(f)** The results are contradictive in that $x2$ is both significant and insignificant depending on the model. This is a tell-tale sign of collinearity.
+
+**(e)**
+```{r}
+x1 = c(x1,.1)
+x2 = c(x2,.8)
+y=c(y,6)
+```
+
+```{r}
+model = lm(y~x1+x2)
+summary(model)
+x1_model = lm(y ~ x1)
+summary(x1_model)
+x2_model = lm(y ~ x2)
+summary(x2_model)
+```
+
+It appears the the models from (d) and (e) are unaffected qualitatively albeit have some different parameter estimaters. The original model is most impacted in that it switched which of $x_1$ and $x_2$ is significant. It is a high leverage point in each model as it changed the coeffecients a large amount for being a single point.

@@ -1,0 +1,174 @@
+---
+title: "Homework 6"
+output: pdf_document
+---
+
+### Problem 1
+
+Loading the data
+```{r}
+genes = read.csv(file="Ch10Ex11.csv", header=FALSE)
+attach(genes)
+```
+
+In order to determine which genes differ the most between the two groups we can perform PCA on the data and analyze the loading vectors. Given that we are looking for differences in the data we dont scale it.
+```{r}
+gene_pca = prcomp(t(genes), center=TRUE, scale. = FALSE)
+summary(gene_pca$rotation)
+```
+
+We can calulate the aboslute value of the total loadings for each gene and display the 10 genes with the greatest difference
+```{r}
+loadings = apply(gene_pca$rotation, 1, sum)
+index = order(abs(loadings), decreasing=TRUE)
+index[1:10]
+```
+
+### Problem 2
+
+We will calculate the Percent of Variance Explained (PVE) via two methods.
+
+First we can use the sdev function component of the prcomp:
+```{r}
+data(USArrests)
+USArrests = scale(USArrests)
+usarrests_pca = prcomp(USArrests)
+variances = usarrests_pca$sdev^2
+pve = variances/sum(variances)
+pve
+```
+
+We could also use Equation 10.8
+$$ PVE_m = \frac{\sum_{i=1}^n\left(\sum_{j=1}^p\phi_{jm}x_{ij}\right)^2}{\sum_{j=1}^p \sum_{i=1}^n x_{ij}^2}$$
+
+### Problem 3
+
+Gathering the Auto data
+```{r}
+library(ISLR)
+library(MASS)
+attach(Auto)
+head(Auto)
+```
+
+Performing PCA (first we remove non numeric columns)
+```{r}
+drop = c("name")
+Auto = Auto[,!(names(Auto) %in% drop)]
+auto_pca = prcomp(Auto, scale=TRUE)
+summary(auto_pca)
+```
+
+```{r}
+auto_pca$rotation
+```
+
+```{r}
+biplot(auto_pca, scale=0)
+```
+
+After analyzing the PCA data we can see that about 95% of the variance is explained by the first four components. We can thus use these four components to possibly improve the performance of our supervised learners. 
+
+### Problem 4
+
+Loading the data
+```{r}
+medgpa = read.csv(file="MedGPA.csv", header=TRUE)
+attach(medgpa)
+logistic_reg = glm(Acceptance~GPA, data=medgpa, family=binomial)
+summary(logistic_reg)
+```
+
+Using the model summary, we can write down the model in two forms
+$$ P(X) = \frac{e^{5.454x-19.207}}{1-e^{5.454x-19.207}}$$
+$$ \log\left(\frac{P(X)}{1-P(X)}\right) = 5.454x-19.207$$
+
+Predicting for a student with a GPA of 3.92
+```{r}
+predict(logistic_reg, newdata = data.frame(GPA=3.92), type="response")
+```
+
+Plotting the model
+```{r}
+x = seq(0,4,0.01)
+y = predict(logistic_reg, data.frame(GPA=x), type="response")
+plot(medgpa$GPA, medgpa$Acceptance, pch=16, xlab="GPA", ylab="Acceptance")
+lines(x,y)
+```
+
+After examining the plot of the model, it appears that a student with a GPA of about 3.5 has a 50-50 chance of being accepted.
+
+### Problem 5
+
+We can solve for the probability $P(X)$ from the odds via the expression
+$$ \frac{P(X)}{1-P(X)} = \text{odds}$$
+
+Given that the odds are 2, the probabiltiy is $P(X) = 2/3$
+Given that the odds are 10, the porbability is $P(X) = 10/11$
+Given that the odds are 1/4, the probability is $P(X) = 1/5$
+
+### Problem 6
+
+We begin by calculating the odds from the porbabilities as follows
+$$ o_t = \frac{.6}{1-.6} = 1.5$$
+$$ o_w = \frac{.01}{1-.01} = .01$$
+Now we take the ratio
+$$ \frac{o_t}{o_w} = \frac{1.5}{.01} = 150$$
+
+### Problem 7
+
+Here is a function to compute outputs of a logistic regression model of the form $$ P(X) = \frac{e^{\beta_0+\beta_1 x}}{1-e^{\beta_0+\beta_1 x}}$$ with given parameters $\beta_0$ and $\beta_1$. 
+```{r}
+logistic = function(beta_0, beta_1, inputs){
+  outputs = numeric(length(inputs))
+  for (i in 1:length(inputs)) {
+    outputs[i] = exp(beta_0+beta_1*inputs[i])/(1+exp(beta_0+beta_1*inputs[i]))
+  }
+  return(outputs)
+}
+```
+
+Now we can get outputs for all three models to use for comparison
+```{r}
+x = seq(-6,0,.01)
+base = logistic(5,2,x)
+a = logistic(5,1,x)
+b = logistic(8,2,x)
+c = logistic(5,-2,x)
+```
+
+Now we can plot them pairwise with the base model and analyze the differences
+```{r}
+plot(x,base, ylab="y")
+lines(x,a)
+```
+
+It seems that decreasing $beta_1$ flattens the curve out.
+
+```{r}
+plot(x,base, ylab="y")
+lines(x,b)
+```
+
+Changing $\beta_0$ appears to translate the curve.
+
+```{r}
+plot(x,base, ylab="y")
+lines(x,c)
+```
+
+Changing the sign of $\beta_1$ appears to flip curve across the vertical axis.
+
+### Problem 8
+
+Predicting using the given model
+$$ \text{odds} = e^{-2.086+.5117(6)} = 2.68$$
+
+The probability is
+$$ P(X) = \frac{e^{-2.086+.5117(6)}}{1+e^{-2.086+.5117(6)}} = .73$$
+Computing the odds for 7cm
+$$ \text{odds} = e^{-2.086+.5117(7)} = 4.63$$
+The odds ratio is then
+$$ \frac{4.63}{2.68} = 1.73$$
+This indicates that a 7cm tumor is much more likely.
+$$  P(X) = \frac{e^{-2.086+.5117(7)}}{1+e^{-2.086+.5117(7)}} = .82$$

@@ -1,0 +1,139 @@
+---
+title: "Homework 7"
+output: pdf_document
+---
+
+### Problem 1
+Creating synthetic data
+```{r}
+set.seed(123)
+train_weights = runif(12, min=35, max=48)
+test_weights = runif(12, min=35, max=48)
+train_error = rnorm(12,0,0.3)
+test_error = rnorm(12,0,0.3)
+train_heights = -20.27 + 1.25*train_weights - 0.01367*train_weights^2 + train_error
+test_heights = -20.27 + 1.25*test_weights - 0.01367*test_weights^2 + test_error
+```
+
+Fitting both a linear model and a flexible model (polynomial of degree 10, in this case)
+```{r}
+linear_model = glm(train_heights~train_weights)
+flexible_model = glm(train_heights~poly(train_weights,10))
+```
+
+Plotting the models and the data
+```{r}
+plot(train_weights, train_heights, pch=16, xlab="Weight", ylab="Height")
+abline(linear_model, col="blue")
+plot_data = data.frame(train_weights=seq(25,48,length.out=231))
+predictions = predict(flexible_model, plot_data, type="response")
+#Need to tranpose plot_data to get into the same shape as predictions for plotting
+lines(t(plot_data), predictions, col="red")
+```
+
+Testing the models on the test data and reporting MSE of predictions shows that the linear model performs better
+```{r}
+linear_MSE = mean((test_heights - predict.glm(linear_model, data.frame(train_weights=test_weights)))^2)
+flexible_MSE = mean((test_heights - predict.glm(flexible_model, data.frame(train_weights=test_weights)))^2)
+cat("Linear-MSE:", linear_MSE, " Flexible-MSE:", flexible_MSE)
+```
+
+### Problem 2
+Computing the eigenvalues requires finding the roots of the characteristic polynomial as follows
+$$ \text{det}(\Sigma-\lambda I) = (1-\lambda)^2-\rho^2 =0$$
+$$ \lambda = 1\pm \rho$$
+Computing the eigenvectors requires solving the following two matrix equations
+$$ (\Sigma+\lambda_1I)x=0$$
+$$ (\Sigma+\lambda_2I)x=0$$
+The solution of the first is as follows (we let $\lambda_1=1+\rho$ and $\lambda_2=1-\rho$)
+$$ \begin{bmatrix}
+  -\rho & \rho\\
+  \rho & -\rho
+\end{bmatrix}\begin{bmatrix}
+  x_1\\x_2
+\end{bmatrix}=\begin{bmatrix}
+0\\0
+\end{bmatrix}
+$$
+$$\begin{bmatrix}
+  x_1\\x_2
+\end{bmatrix}=\frac{1}{\sqrt{2}}\begin{bmatrix} 1\\1 \end{bmatrix}$$
+Similarly for the second equation
+$$ \begin{bmatrix}
+  \rho & \rho\\
+  \rho & \rho
+\end{bmatrix}\begin{bmatrix}
+  x_1\\x_2
+\end{bmatrix}=\begin{bmatrix}
+0\\0
+\end{bmatrix}
+$$
+$$\begin{bmatrix}
+  x_1\\x_2
+\end{bmatrix}=\frac{1}{\sqrt{2}}\begin{bmatrix} 1\\-1 \end{bmatrix}$$
+Note that the eigenvectors have been normalized. The principle components are then computed according to
+$$ Y = \Gamma^T(X-mu)$$
+Where we define
+$$ \Gamma = \frac{1}{\sqrt{2}}\begin{bmatrix}
+  1 & 1\\
+  1 & -1
+\end{bmatrix}$$
+Which is the matrix whose columns are the eigenvectors computed previously for $\Sigma$. Recall that the distribution is given by 
+$$ X \sim N(0,\Sigma)$$
+So the principal components are simply given by
+$$ Y=\frac{1}{\sqrt{2}}\begin{bmatrix}
+  1 & 1\\
+  1 & -1
+\end{bmatrix}X$$
+The first principal component is given by the first entry of $Y$
+$$ Y_1 = \frac{1}{\sqrt{2}}(x_1+x_2)$$
+And thus the second is
+$$ Y_2 = \frac{1}{\sqrt{2}}(x_1-x_2)$$
+Where $x_1$ and $x_2$ are the two features of any given data point $x\in X$. The loading vectors of each principal component are simply the vectors containing the coeffecients from the corresponding principal component linear combination. Thus the laodings are
+$$ L_1 = \frac{1}{\sqrt{2}}\begin{bmatrix}
+  1\\1
+\end{bmatrix}$$
+$$ L_2 = \frac{1}{\sqrt{2}}\begin{bmatrix}
+  1\\-1
+\end{bmatrix}$$
+The variance of each principal component can be computed using the linearity properties of the variance
+$$ Var(Y_1) = \frac{1}{2}Var(x_1+x_2) = \frac{1}{2}(Var(x_1)+Var(x_2)) + Cov(x_1,x_2) = 1+\rho$$
+$$ Var(Y_2) = \frac{1}{2}Var(x_1-x_2) = \frac{1}{2}(Var(x_1)-Var(x_2)) + Cov(x_1,x_2) = 1-\rho$$
+The proportion of variance explained is given by
+$$ P_1 = \frac{Var(Y_1)}{Var(Y_1)+Var(Y_2)} = \frac{1+\rho}{2}$$
+$$ P_2 = \frac{Var(Y_2)}{Var(Y_1)+Var(Y_2)} = \frac{1-\rho}{2}$$
+
+### Problem 3
+Loading the data and computing the variance covariance matrix for the first two columns
+```{r}
+data = data.frame("weight"=c(35,37,38,40),"height"=c(7,7.2,7.2,7.5),"zweight"=c(-1.20096,-0.24019,0.24019,1.260096),"zheight"=c(-1.09141,-0.12127,-0.12127,1.33395))
+vcov_weight_height = cbind(c(var(data$weight), cov(data$weight, data$height)), c(cov(data$weight, data$height), var(data$height)))
+vcov_weight_height
+```
+
+Computing the variance covariance for the last two columns
+```{r}
+vcov_zweight_zheight = cbind(c(var(data$zweight), cov(data$zweight, data$zheight)), c(cov(data$zweight, data$zheight), var(data$zheight)))
+vcov_zweight_zheight
+```
+
+Computing PCA for the first two columns of the data and printing the loadings
+```{r}
+zhw = data.frame("zweight"=data$zweight, "zheight"=data$zheight)
+pca = prcomp(zhw, scale = TRUE)
+pca$rotation
+```
+
+These are identical to the loadings calculated in Problem 2. Computing the variance of the principal components and printing the first
+```{r}
+var_prcomp_1 = pca$sdev[1]^2
+var_prcomp_2 = pca$sdev[2]^2
+cat("First Principal Component Variance:", var_prcomp_1)
+```
+
+The computed variance is higher than that computed above where the above is computed using $\rho=cov(Y_1)$. Computing now the proportions of variance explained
+```{r}
+p_1 = var_prcomp_1/sum(var_prcomp_1 + var_prcomp_2)
+p_2 = var_prcomp_2/sum(var_prcomp_1 + var_prcomp_2)
+cat("P1:", p_1, "P2:", p_2)
+```

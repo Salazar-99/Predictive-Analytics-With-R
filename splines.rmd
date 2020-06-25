@@ -1,0 +1,40 @@
+---
+title: "Exercise 4-4"
+output: html_document
+---
+Loading the data
+```{r}
+library(ISLR)
+attach(Auto)
+```
+
+Plot of data
+```{r}
+plot(Auto$displacement,Auto$mpg)
+```
+
+It appears that this data is slightly nonlinear particularly near the lower end of the domain.
+
+Building some models
+```{r}
+library(splines)
+poly = lm(mpg~poly(displacement,2), data=Auto)
+cubic_spline = lm(mpg~bs(displacement, knots=c(100,200,300,400)), data=Auto)
+natural_spline = lm(mpg~ns(displacement,df=4), data=Auto)
+smoothing_spline = smooth.spline(mpg,displacement,df=10)
+```
+
+Summary of first model
+```{r}
+summary(poly)
+```
+
+The quadratic predictor is significant so this is already evidence of nonlinearity in the data on top of what we saw from the original plot.
+
+Predicting with displacement=250 for each model
+```{r}
+newdata=data.frame(displacement=250)
+predict(poly, newdata=newdata)
+predict(cubic_spline, newdata=newdata)
+predict(natural_spline, newdata=newdata)
+```

@@ -1,0 +1,97 @@
+---
+title: "Exercise 3-1"
+output: html_document
+---
+We begin by building the text messages data set based on the provided data. First the teen data:
+```{r}
+n = 800-696
+teen_ones = rep(1,696)
+teen_zeros = rep(0,n)
+teen = c(teen_zeros, teen_ones)
+```
+
+Now the adult data:
+```{r}
+n = 2252-1621
+adult_ones = rep(1,1621)
+adult_zeros = rep(0,n)
+adult = c(adult_zeros, adult_ones)
+```
+
+Here I define a function for bootstrapping a difference of proportions
+```{r}
+bootstrap_props = function(data1, data2, samples){
+  prop_difs = numeric(samples)
+  for (i in samples){
+    data1_sample = sample(data1, size = length(data1), replace=TRUE)
+    data2_sample = sample(data2, size = length(data2), replace=TRUE)
+    prop1 = mean(data1_sample)
+    prop2 = mean(data2_sample)
+    prop_difs[i] = prop1-prop2
+  }
+  return(prop_difs)
+}
+```
+
+Now we can perform the bootstrap and plot it
+```{r}
+prop_difs = bootstrap_props(teen, adult, 10000)
+hist(prop_difs)
+```
+
+Now we can prepare the pregnant data set
+```{r}
+n = 135-38
+p_smoker_ones = rep(1,38)
+p_smoker_zeros = rep(0,n)
+p_smoker = c(p_smoker_zeros, p_smoker_ones)
+```
+```{r}
+n = 543-206
+p_nonsmoker_ones = rep(1,206)
+p_nonsmoker_zeros = rep(0,n)
+p_nonsmoker = c(p_nonsmoker_zeros, p_nonsmoker_ones)
+```
+
+Performing the bootstrap
+```{r}
+prop_difs = bootstrap_props(p_smoker, p_nonsmoker, 10000)
+hist(prop_difs)
+```
+
+Loading the Restaurant Tips data set and attaching it
+```{r}
+tips = read.csv("restaurantTipsBill.csv", header=TRUE)
+attach(tips)
+```
+
+Here is a bootstrap for the correlation coefficients
+```{r}
+N=10^4
+n=nrow(tips)
+corrs = numeric(N)
+for (i in 1:N){
+  index = sample(n, replace=TRUE)
+  tips_boot = tips[index, ]
+  corrs[i] = cor(tips_boot["Tip"], tips_boot["Bill"])
+}
+hist(corrs)
+```
+
+Here is a bootstrap for the regression slopes
+```{r}
+N=10^4
+n=nrow(tips)
+slopes = numeric(N)
+for (i in 1:N){
+  index = sample(n, replace=TRUE)
+  tips_boot = tips[index, ]
+  regression = lm(tips_boot$Tip~tips_boot$Bill, data=tips_boot)
+  slopes[i] = coef(regression)[2]
+}
+hist(slopes)
+```
+
+
+
+
